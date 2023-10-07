@@ -54,40 +54,57 @@ void MqttHandlePylontechHassClass::publishConfig()
     publishSensor("Manufacturer", "mdi:factory", "manufacturer");
 
     // battery info
-    publishSensor("Battery voltage", NULL, "voltage", "voltage", "measurement", "V");
-    publishSensor("Battery current", NULL, "current", "current", "measurement", "A");
-    publishSensor("Temperature", NULL, "temperature", "temperature", "measurement", "°C");
-    publishSensor("State of Charge (SOC)", NULL, "stateOfCharge", "battery", "measurement", "%");
-    publishSensor("State of Health (SOH)", "mdi:heart-plus", "stateOfHealth", NULL, "measurement", "%");
-    publishSensor("Charge voltage (BMS)", NULL, "settings/chargeVoltage", "voltage", "measurement", "V");
-    publishSensor("Charge current limit", NULL, "settings/chargeCurrentLimitation", "current", "measurement", "A");
-    publishSensor("Discharge current limit", NULL, "settings/dischargeCurrentLimitation", "current", "measurement", "A");
-
-    publishBinarySensor("Alarm Discharge current", "mdi:alert", "alarm/overCurrentDischarge", "1", "0");
-    publishBinarySensor("Warning Discharge current", "mdi:alert-outline", "warning/highCurrentDischarge", "1", "0");
-
-    publishBinarySensor("Alarm Temperature low", "mdi:thermometer-low", "alarm/underTemperature", "1", "0");
-    publishBinarySensor("Warning Temperature low", "mdi:thermometer-low", "warning/lowTemperature", "1", "0");
-
-    publishBinarySensor("Alarm Temperature high", "mdi:thermometer-high", "alarm/overTemperature", "1", "0");
-    publishBinarySensor("Warning Temperature high", "mdi:thermometer-high", "warning/highTemperature", "1", "0");
-
-    publishBinarySensor("Alarm Voltage low", "mdi:alert", "alarm/underVoltage", "1", "0");
-    publishBinarySensor("Warning Voltage low", "mdi:alert-outline", "warning/lowVoltage", "1", "0");
-
-    publishBinarySensor("Alarm Voltage high", "mdi:alert", "alarm/overVoltage", "1", "0");
-    publishBinarySensor("Warning Voltage high", "mdi:alert-outline", "warning/highVoltage", "1", "0");
-
-    publishBinarySensor("Alarm BMS internal", "mdi:alert", "alarm/bmsInternal", "1", "0");
-    publishBinarySensor("Warning BMS internal", "mdi:alert-outline", "warning/bmsInternal", "1", "0");
-
-    publishBinarySensor("Alarm High charge current", "mdi:alert", "alarm/overCurrentCharge", "1", "0");
-    publishBinarySensor("Warning High charge current", "mdi:alert-outline", "warning/highCurrentCharge", "1", "0");
-
-    publishBinarySensor("Charge enabled", "mdi:battery-arrow-up", "charging/chargeEnabled", "1", "0");
-    publishBinarySensor("Discharge enabled", "mdi:battery-arrow-down", "charging/dischargeEnabled", "1", "0");
-    publishBinarySensor("Charge immediately", "mdi:alert", "charging/chargeImmediately", "1", "0");
-
+    // distinction PYONTCH / JK BMS
+    if (false) {
+        publishSensor("Battery voltage", NULL, "voltage", "voltage", "measurement", "V");
+        publishSensor("Battery current", NULL, "current", "current", "measurement", "A");
+        publishSensor("Temperature", NULL, "temperature", "temperature", "measurement", "°C");
+        publishSensor("State of Charge (SOC)", NULL, "stateOfCharge", "battery", "measurement", "%");
+        publishSensor("State of Health (SOH)", "mdi:heart-plus", "stateOfHealth", NULL, "measurement", "%");
+        publishSensor("Charge voltage (BMS)", NULL, "settings/chargeVoltage", "voltage", "measurement", "V");
+        publishSensor("Charge current limit", NULL, "settings/chargeCurrentLimitation", "current", "measurement", "A");
+        publishSensor("Discharge current limit", NULL, "settings/dischargeCurrentLimitation", "current", "measurement", "A");
+    
+        publishBinarySensor("Alarm Discharge current", "mdi:alert", "alarm/overCurrentDischarge", "1", "0");
+        publishBinarySensor("Warning Discharge current", "mdi:alert-outline", "warning/highCurrentDischarge", "1", "0");
+    
+        publishBinarySensor("Alarm Temperature low", "mdi:thermometer-low", "alarm/underTemperature", "1", "0");
+        publishBinarySensor("Warning Temperature low", "mdi:thermometer-low", "warning/lowTemperature", "1", "0");
+    
+        publishBinarySensor("Alarm Temperature high", "mdi:thermometer-high", "alarm/overTemperature", "1", "0");
+        publishBinarySensor("Warning Temperature high", "mdi:thermometer-high", "warning/highTemperature", "1", "0");
+    
+        publishBinarySensor("Alarm Voltage low", "mdi:alert", "alarm/underVoltage", "1", "0");
+        publishBinarySensor("Warning Voltage low", "mdi:alert-outline", "warning/lowVoltage", "1", "0");
+    
+        publishBinarySensor("Alarm Voltage high", "mdi:alert", "alarm/overVoltage", "1", "0");
+        publishBinarySensor("Warning Voltage high", "mdi:alert-outline", "warning/highVoltage", "1", "0");
+    
+        publishBinarySensor("Alarm BMS internal", "mdi:alert", "alarm/bmsInternal", "1", "0");
+        publishBinarySensor("Warning BMS internal", "mdi:alert-outline", "warning/bmsInternal", "1", "0");
+    
+        publishBinarySensor("Alarm High charge current", "mdi:alert", "alarm/overCurrentCharge", "1", "0");
+        publishBinarySensor("Warning High charge current", "mdi:alert-outline", "warning/highCurrentCharge", "1", "0");
+    
+        publishBinarySensor("Charge enabled", "mdi:battery-arrow-up", "charging/chargeEnabled", "1", "0");
+        publishBinarySensor("Discharge enabled", "mdi:battery-arrow-down", "charging/dischargeEnabled", "1", "0");
+        publishBinarySensor("Charge immediately", "mdi:alert", "charging/chargeImmediately", "1", "0");
+    } else {
+    
+        publishSensor("Battery voltage", NULL, "BatteryVoltageMilliVolt", "voltage", "measurement", "mV");
+        publishSensor("Battery current", NULL, "BatteryCurrentMilliAmps", "current", "measurement", "mA");
+        publishSensor("BMS temperature", NULL, "BmsTempCelsius", "temperature", "measurement", "°C");
+        publishSensor("Battery temperature 1", NULL, "BatteryTempOneCelsius", "temperature", "measurement", "°C");
+        publishSensor("Battery temperature 2", NULL, "BatteryTempTwoCelsius", "temperature", "measurement", "°C");
+        
+        publishBinarySensor("Charge enabled", "mdi:battery-arrow-up", "BatteryChargeEnabled", "1", "0");
+        publishBinarySensor("Discharge enabled", "mdi:battery-arrow-down", "BatteryDischargeEnabled", "1", "0");
+        publishBinarySensor("Balancing enabled", "mdi:battery-sync", "BalancingEnabled", "1", "0");
+        
+        publishSensor("State of Charge (SOC)", NULL, "stateOfCharge", "battery", "measurement", "%");
+        publishSensor("Battery Cycles", NULL, "BatteryCycles", "voltage", "measurement", "V");
+        publishSensor("Battery Cycle Capacity", NULL, "BatteryCyclesCapacity", "power_factor", "measurement", "Ah");
+    }
     yield();
 }
 
