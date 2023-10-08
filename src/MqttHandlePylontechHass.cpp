@@ -105,7 +105,7 @@ void MqttHandlePylontechHassClass::publishConfig()
 
         // common sensors        
         publishSensor("Battery Cycles", "mdi:counter", "BatteryCycles");
-        publishSensor("Battery Cycle Capacity", "mdi:counter", "BatteryCyclesCapacity");
+        publishSensor("Battery Cycle Capacity", "mdi:counter", "BatteryCycleCapacity");
         publishSensor("Status", "mdi:list-status", "StatusBitmask");
         publishSensor("Alarm", "mdi:bell", "AlarmsBitmask");
     }
