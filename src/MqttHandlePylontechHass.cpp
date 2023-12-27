@@ -94,8 +94,8 @@ void MqttHandlePylontechHassClass::publishConfig()
         case 1: // JK BMS
             // numeric sensors
             publishSensor("Battery voltage", NULL, "BatteryVoltageMilliVolt", "voltage", "measurement", "mV");
-			publishSensor("Cell average voltage", NULL, "CellAvgMilliVolt", "voltage", "measurement", "mV");
-			publishSensor("Cell difference voltage", NULL, "CellDiffMilliVolt", "voltage", "measurement", "mV");
+            publishSensor("Cell average voltage", NULL, "CellAvgMilliVolt", "voltage", "measurement", "mV");
+            publishSensor("Cell difference voltage", NULL, "CellDiffMilliVolt", "voltage", "measurement", "mV");
             publishSensor("Battery current", NULL, "BatteryCurrentMilliAmps", "current", "measurement", "mA");
             publishSensor("BMS temperature", NULL, "BmsTempCelsius", "temperature", "measurement", "°C");
             publishSensor("Battery temperature 1", NULL, "BatteryTempOneCelsius", "temperature", "measurement", "°C");
