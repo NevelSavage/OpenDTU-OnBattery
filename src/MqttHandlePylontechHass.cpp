@@ -59,7 +59,7 @@ void MqttHandlePylontechHassClass::publishConfig()
 
     // battery info
     // distinction PYONTCH / JK BMS / 
-    switch (config.Battery_Provider) {
+    switch (config.Battery.Provider) {
         case 0: // Pylontech
             publishSensor("Battery voltage", NULL, "voltage", "voltage", "measurement", "V");
             publishSensor("Battery current", NULL, "current", "current", "measurement", "A");
