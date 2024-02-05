@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022-2023 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "WebApi_gridprofile.h"
 #include "WebApi.h"
 #include <AsyncJson.h>
 #include <Hoymiles.h>
 
-void WebApiGridProfileClass::init(AsyncWebServer& server)
+void WebApiGridProfileClass::init(AsyncWebServer& server, Scheduler& scheduler)
 {
     using std::placeholders::_1;
 
@@ -17,10 +17,6 @@ void WebApiGridProfileClass::init(AsyncWebServer& server)
     _server->on("/api/gridprofile/rawdata", HTTP_GET, std::bind(&WebApiGridProfileClass::onGridProfileRawdata, this, _1));
 }
 
-void WebApiGridProfileClass::loop()
-{
-}
-
 void WebApiGridProfileClass::onGridProfileStatus(AsyncWebServerRequest* request)
 {
     if (!WebApi.checkCredentialsReadonly(request)) {
@@ -28,7 +24,7 @@ void WebApiGridProfileClass::onGridProfileStatus(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse(false, 8192);
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
 
     uint64_t serial = 0;
     if (request->hasParam("inv")) {
@@ -72,7 +68,7 @@ void WebApiGridProfileClass::onGridProfileRawdata(AsyncWebServerRequest* request
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse(false, 4096);
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
 
     uint64_t serial = 0;
     if (request->hasParam("inv")) {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022-2023 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "WebApi_limit.h"
 #include "WebApi.h"
@@ -10,7 +10,7 @@
 #include <AsyncJson.h>
 #include <Hoymiles.h>
 
-void WebApiLimitClass::init(AsyncWebServer& server)
+void WebApiLimitClass::init(AsyncWebServer& server, Scheduler& scheduler)
 {
     using std::placeholders::_1;
 
@@ -20,10 +20,6 @@ void WebApiLimitClass::init(AsyncWebServer& server)
     _server->on("/api/limit/config", HTTP_POST, std::bind(&WebApiLimitClass::onLimitPost, this, _1));
 }
 
-void WebApiLimitClass::loop()
-{
-}
-
 void WebApiLimitClass::onLimitStatus(AsyncWebServerRequest* request)
 {
     if (!WebApi.checkCredentialsReadonly(request)) {
@@ -31,7 +27,7 @@ void WebApiLimitClass::onLimitStatus(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
 
     for (uint8_t i = 0; i < Hoymiles.getNumInverters(); i++) {
         auto inv = Hoymiles.getInverterByPos(i);
@@ -64,7 +60,7 @@ void WebApiLimitClass::onLimitPost(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject retMsg = response->getRoot();
+    auto& retMsg = response->getRoot();
     retMsg["type"] = "warning";
 
     if (!request->hasParam("data", true)) {

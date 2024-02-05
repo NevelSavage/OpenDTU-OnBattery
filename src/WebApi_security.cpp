@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022-2023 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "WebApi_security.h"
 #include "Configuration.h"
@@ -9,7 +9,7 @@
 #include "helper.h"
 #include <AsyncJson.h>
 
-void WebApiSecurityClass::init(AsyncWebServer& server)
+void WebApiSecurityClass::init(AsyncWebServer& server, Scheduler& scheduler)
 {
     using std::placeholders::_1;
 
@@ -20,10 +20,6 @@ void WebApiSecurityClass::init(AsyncWebServer& server)
     _server->on("/api/security/authenticate", HTTP_GET, std::bind(&WebApiSecurityClass::onAuthenticateGet, this, _1));
 }
 
-void WebApiSecurityClass::loop()
-{
-}
-
 void WebApiSecurityClass::onSecurityGet(AsyncWebServerRequest* request)
 {
     if (!WebApi.checkCredentials(request)) {
@@ -31,7 +27,7 @@ void WebApiSecurityClass::onSecurityGet(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
     const CONFIG_T& config = Configuration.get();
 
     root["password"] = config.Security.Password;
@@ -48,7 +44,7 @@ void WebApiSecurityClass::onSecurityPost(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject retMsg = response->getRoot();
+    auto& retMsg = response->getRoot();
     retMsg["type"] = "warning";
 
     if (!request->hasParam("data", true)) {
@@ -101,11 +97,8 @@ void WebApiSecurityClass::onSecurityPost(AsyncWebServerRequest* request)
     CONFIG_T& config = Configuration.get();
     strlcpy(config.Security.Password, root["password"].as<String>().c_str(), sizeof(config.Security.Password));
     config.Security.AllowReadonly = root["allow_readonly"].as<bool>();
-    Configuration.write();
 
-    retMsg["type"] = "success";
-    retMsg["message"] = "Settings saved!";
-    retMsg["code"] = WebApiError::GenericSuccess;
+    WebApi.writeConfig(retMsg);
 
     response->setLength();
     request->send(response);
@@ -118,7 +111,7 @@ void WebApiSecurityClass::onAuthenticateGet(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject retMsg = response->getRoot();
+    auto& retMsg = response->getRoot();
     retMsg["type"] = "success";
     retMsg["message"] = "Authentication successful!";
     retMsg["code"] = WebApiError::SecurityAuthSuccess;

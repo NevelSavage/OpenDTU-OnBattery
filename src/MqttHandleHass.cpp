@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022-2023 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "MqttHandleHass.h"
 #include "MqttHandleInverter.h"
@@ -11,11 +11,14 @@
 
 MqttHandleHassClass MqttHandleHass;
 
+MqttHandleHassClass::MqttHandleHassClass()
+    : _loopTask(TASK_IMMEDIATE, TASK_FOREVER, std::bind(&MqttHandleHassClass::loop, this))
+{
+}
+
 void MqttHandleHassClass::init(Scheduler& scheduler)
 {
     scheduler.addTask(_loopTask);
-    _loopTask.setCallback(std::bind(&MqttHandleHassClass::loop, this));
-    _loopTask.setIterations(TASK_FOREVER);
     _loopTask.enable();
 }
 
@@ -53,7 +56,7 @@ void MqttHandleHassClass::publishConfig()
 
     const CONFIG_T& config = Configuration.get();
 
-     // publish DTU sensors
+    // publish DTU sensors
     publishDtuSensor("IP", "", "diagnostic", "mdi:network-outline", "", "");
     publishDtuSensor("WiFi Signal", "signal_strength", "diagnostic", "", "dBm", "rssi");
     publishDtuSensor("Uptime", "duration", "diagnostic", "", "s", "");
@@ -135,6 +138,10 @@ void MqttHandleHassClass::publishInverterField(std::shared_ptr<InverterAbstract>
         }
 
         DynamicJsonDocument root(1024);
+        if (!Utils::checkJsonAlloc(root, __FUNCTION__, __LINE__)) {
+            return;
+        }
+
         root["name"] = name;
         root["stat_t"] = stateTopic;
         root["uniq_id"] = serial + "_ch" + chanNum + "_" + fieldName;
@@ -179,6 +186,10 @@ void MqttHandleHassClass::publishInverterButton(std::shared_ptr<InverterAbstract
     const String cmdTopic = MqttSettings.getPrefix() + serial + "/" + subTopic;
 
     DynamicJsonDocument root(1024);
+    if (!Utils::checkJsonAlloc(root, __FUNCTION__, __LINE__)) {
+        return;
+    }
+
     root["name"] = caption;
     root["uniq_id"] = serial + "_" + buttonId;
     if (strcmp(icon, "")) {
@@ -217,6 +228,10 @@ void MqttHandleHassClass::publishInverterNumber(
     const String statTopic = MqttSettings.getPrefix() + serial + "/" + stateTopic;
 
     DynamicJsonDocument root(1024);
+    if (!Utils::checkJsonAlloc(root, __FUNCTION__, __LINE__)) {
+        return;
+    }
+
     root["name"] = caption;
     root["uniq_id"] = serial + "_" + buttonId;
     if (strcmp(icon, "")) {
@@ -251,6 +266,10 @@ void MqttHandleHassClass::publishInverterBinarySensor(std::shared_ptr<InverterAb
     const String statTopic = MqttSettings.getPrefix() + serial + "/" + subTopic;
 
     DynamicJsonDocument root(1024);
+    if (!Utils::checkJsonAlloc(root, __FUNCTION__, __LINE__)) {
+        return;
+    }
+
     root["name"] = caption;
     root["uniq_id"] = serial + "_" + sensorId;
     root["stat_t"] = statTopic;
@@ -275,6 +294,10 @@ void MqttHandleHassClass::publishDtuSensor(const char* name, const char* device_
     }
 
     DynamicJsonDocument root(1024);
+    if (!Utils::checkJsonAlloc(root, __FUNCTION__, __LINE__)) {
+        return;
+    }
+
     root["name"] = name;
     root["uniq_id"] = getDtuUniqueId() + "_" + id;
     if (strcmp(device_class, "")) {
@@ -317,6 +340,10 @@ void MqttHandleHassClass::publishDtuBinarySensor(const char* name, const char* d
     }
 
     DynamicJsonDocument root(1024);
+    if (!Utils::checkJsonAlloc(root, __FUNCTION__, __LINE__)) {
+        return;
+    }
+
     root["name"] = name;
     root["uniq_id"] = getDtuUniqueId() + "_" + id;
     root["stat_t"] = MqttSettings.getPrefix() + topic;
@@ -397,5 +424,5 @@ void MqttHandleHassClass::publish(const String& subtopic, const String& payload)
 {
     String topic = Configuration.get().Mqtt.Hass.Topic;
     topic += subtopic;
-    MqttSettings.publishGeneric(topic.c_str(), payload.c_str(), Configuration.get().Mqtt.Hass.Retain);
+    MqttSettings.publishGeneric(topic, payload, Configuration.get().Mqtt.Hass.Retain);
 }

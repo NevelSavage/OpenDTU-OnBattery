@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022-2023 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "WebApi_mqtt.h"
 #include "Configuration.h"
@@ -15,7 +15,7 @@
 #include "PowerMeter.h"
 #include <AsyncJson.h>
 
-void WebApiMqttClass::init(AsyncWebServer& server)
+void WebApiMqttClass::init(AsyncWebServer& server, Scheduler& scheduler)
 {
     using std::placeholders::_1;
 
@@ -26,10 +26,6 @@ void WebApiMqttClass::init(AsyncWebServer& server)
     _server->on("/api/mqtt/config", HTTP_POST, std::bind(&WebApiMqttClass::onMqttAdminPost, this, _1));
 }
 
-void WebApiMqttClass::loop()
-{
-}
-
 void WebApiMqttClass::onMqttStatus(AsyncWebServerRequest* request)
 {
     if (!WebApi.checkCredentialsReadonly(request)) {
@@ -37,7 +33,7 @@ void WebApiMqttClass::onMqttStatus(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse(false, MQTT_JSON_DOC_SIZE);
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
     const CONFIG_T& config = Configuration.get();
 
     root["mqtt_enabled"] = config.Mqtt.Enabled;
@@ -72,7 +68,7 @@ void WebApiMqttClass::onMqttAdminGet(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse(false, MQTT_JSON_DOC_SIZE);
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
     const CONFIG_T& config = Configuration.get();
 
     root["mqtt_enabled"] = config.Mqtt.Enabled;
@@ -111,7 +107,7 @@ void WebApiMqttClass::onMqttAdminPost(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse(false, MQTT_JSON_DOC_SIZE);
-    JsonObject retMsg = response->getRoot();
+    auto& retMsg = response->getRoot();
     retMsg["type"] = "warning";
 
     if (!request->hasParam("data", true)) {
@@ -342,11 +338,8 @@ void WebApiMqttClass::onMqttAdminPost(AsyncWebServerRequest* request)
     config.Mqtt.Hass.Retain = root["mqtt_hass_retain"].as<bool>();
     config.Mqtt.Hass.IndividualPanels = root["mqtt_hass_individualpanels"].as<bool>();
     strlcpy(config.Mqtt.Hass.Topic, root["mqtt_hass_topic"].as<String>().c_str(), sizeof(config.Mqtt.Hass.Topic));
-    Configuration.write();
 
-    retMsg["type"] = "success";
-    retMsg["message"] = "Settings saved!";
-    retMsg["code"] = WebApiError::GenericSuccess;
+    WebApi.writeConfig(retMsg);
 
     response->setLength();
     request->send(response);

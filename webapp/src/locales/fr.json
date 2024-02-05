@@ -31,10 +31,15 @@
         "Yes": "Oui",
         "No": "Non",
         "VerboseLogging": "Journalisation Détaillée",
+        "Seconds": "Secondes",
         "Loading": "Chargement...",
         "Reload": "Reload",
         "Cancel": "Annuler",
-        "Save": "Sauvegarder"
+        "Save": "Sauvegarder",
+        "Refreshing": "Refreshing",
+        "Pull": "Pull down to refresh",
+        "Release": "Release to refresh",
+        "Close": "Fermer"
     },
     "localeswitcher": {
         "Dark": "Sombre",
@@ -47,10 +52,12 @@
         "1003": "Données trop importantes !",
         "1004": "Échec de l'analyse des données !",
         "1005": "Certaines valeurs sont manquantes !",
+        "1006": "Write failed!",
         "2001": "Le numéro de série ne peut pas être nul !",
         "2002": "L'intervalle de sondage doit être supérieur à zéro !",
         "2003": "Réglage du niveau de puissance invalide !",
         "2004": "The frequency must be set between {min} and {max} kHz and must be a multiple of 250kHz!",
+        "2005": "Invalid country selection !",
         "3001": "Rien n'a été supprimé !",
         "3002": "Configuration réinitialisée. Redémarrage maintenant...",
         "4001": "@:apiresponse.2001",
@@ -119,7 +126,6 @@
         "UnreadMessages": "messages non lus",
         "Loading": "@:base.Loading",
         "EventLog": "Journal des événements",
-        "Close": "Fermer",
         "InverterInfo": "Informations sur l'onduleur",
         "LimitSettings": "Paramètres de la limite",
         "LastLimitSetStatus": "Statut de la dernière limite fixée",
@@ -223,10 +229,12 @@
         "FirmwareVersionHint": "Cliquez ici pour afficher des informations sur votre version actuelle",
         "FirmwareUpdate": "Mise à jour du firmware",
         "FirmwareUpdateHint": "Cliquez ici pour voir les changements entre votre version et la dernière version",
+        "FrmwareUpdateAllow": "En activant le contrôle de mise à jour, une demande est envoyée à GitHub.com à chaque fois que la page est consultée afin de récupérer la dernière version disponible. Si tu n'es pas d'accord, laisse cette fonction désactivée.",
         "ResetReason0": "Raison de la réinitialisation CPU 0",
         "ResetReason1": "Raison de la réinitialisation CPU 1",
         "ConfigSaveCount": "Nombre d'enregistrements de la configuration",
-        "Uptime": "Temps de fonctionnement"
+        "Uptime": "Durée de fonctionnement",
+        "UptimeValue": "0 jour {time} | 1 jour {time} | {count} jours {time}"
     },
     "hardwareinfo": {
         "HardwareInformation": "Informations sur le matériel",
@@ -246,6 +254,13 @@
         "Heap": "Heap",
         "LittleFs": "LittleFs",
         "Sketch": "Sketch"
+    },
+    "heapdetails": {
+        "HeapDetails": "Heap Details",
+        "TotalFree": "Total free",
+        "LargestFreeBlock": "Biggest contiguous free block",
+        "MaxUsage": "Maximum usage since start",
+        "Fragmentation": "Level of fragmentation"
     },
     "radioinfo": {
         "RadioInformation": "Informations sur la radio",
@@ -358,10 +373,7 @@
     "inverterchannelinfo": {
         "String": "Ligne {num}",
         "Phase": "Phase {num}",
-        "General": "General",
-        "Property": "Propriété",
-        "Value": "Valeur",
-        "Unit": "Unité"
+        "General": "General"
     },
     "invertertotalinfo": {
         "InverterTotalYieldTotal": "Onduleurs rendement total",
@@ -409,9 +421,14 @@
         "CmtPaLevel": "CMT2300A Niveau de puissance d'émission",
         "NrfPaLevelHint": "Used for HM-Inverters. Assurez-vous que votre alimentation est suffisamment stable avant d'augmenter la puissance d'émission.",
         "CmtPaLevelHint": "Used for HMS/HMT-Inverters. Assurez-vous que votre alimentation est suffisamment stable avant d'augmenter la puissance d'émission.",
+        "CmtCountry": "CMT2300A Region/Country:",
+        "CmtCountryHint": "Each country has different frequency allocations.",
+        "country_0": "Europe ({min}MHz - {max}MHz)",
+        "country_1": "North America ({min}MHz - {max}MHz)",
+        "country_2": "Brazil ({min}MHz - {max}MHz)",
         "CmtFrequency": "CMT2300A Frequency:",
         "CmtFrequencyHint": "Make sure to only use frequencies that are allowed in the respective country! After a frequency change, it can take up to 15min until a connection is established.",
-        "CmtFrequencyWarning": "The selected frequency is outside the range allowed in the EU. Make sure that this selection does not violate any local regulations.",
+        "CmtFrequencyWarning": "The selected frequency is outside the allowed range in your selected region/country. Make sure that this selection does not violate any local regulations.",
         "MHz": "{mhz} MHz",
         "dBm": "{dbm} dBm",
         "Min": "Minimum ({db} dBm)",
@@ -467,7 +484,6 @@
         "ApTimeout": "Délai d'attente du point d'accès",
         "ApTimeoutHint": "Durée pendant laquelle le point d'accès reste ouvert. Une valeur de 0 signifie infini.",
         "Minutes": "minutes",
-        "Save": "@:dtuadmin.Save",
         "EnableMdns": "Activer mDNS",
         "MdnsSettings": "mDNS Settings"
     },
@@ -512,8 +528,7 @@
         "HassPrefixTopicHint": "Le préfixe de découverte du sujet",
         "HassRetain": "Activer du maintien",
         "HassExpire": "Activer l'expiration",
-        "HassIndividual": "Panneaux individuels",
-        "Save": "@:dtuadmin.Save"
+        "HassIndividual": "Panneaux individuels"
     },
     "vedirectadmin": {
         "VedirectSettings": "VE.Direct Settings",
@@ -521,8 +536,7 @@
         "EnableVedirect": "Enable VE.Direct",
         "VedirectParameter": "VE.Direct Parameter",
         "VerboseLogging": "@:base.VerboseLogging",
-        "UpdatesOnly": "Publish values to MQTT only when they change",
-        "Save": "@:dtuadmin.Save"
+        "UpdatesOnly": "Publish values to MQTT only when they change"
     },
     "batteryadmin": {
         "BatterySettings": "Battery Settings",
@@ -532,14 +546,16 @@
         "Provider": "Data Provider",
         "ProviderPylontechCan": "Pylontech using CAN bus",
         "ProviderJkBmsSerial": "Jikong (JK) BMS using serial connection",
+        "ProviderMqtt": "State of Charge (SoC) value from MQTT broker",
         "ProviderVictron": "Victron SmartShunt using VE.Direct interface",
+        "MqttConfiguration": "MQTT Settings",
+        "MqttTopic": "SoC value topic",
         "JkBmsConfiguration": "JK BMS Settings",
         "JkBmsInterface": "Interface Type",
         "JkBmsInterfaceUart": "TTL-UART on MCU",
         "JkBmsInterfaceTransceiver": "RS-485 Transceiver on MCU",
         "PollingInterval": "Polling Interval",
-        "Seconds": "@:dtuadmin.Seconds",
-        "Save": "@:dtuadmin.Save"
+        "Seconds": "@:base.Seconds"
     },
     "inverteradmin": {
         "InverterSettings": "Paramètres des onduleurs",
@@ -648,8 +664,7 @@
       "BatterySocInfo": "<b>Hint:</b> The battery SoC (State of Charge) values can only be used if the battery communication interface is enabled. If the battery has not reported any SoC updates in the last minute, the voltage thresholds will be used as fallback.",
       "InverterIsBehindPowerMeter": "Inverter is behind Power meter",
       "Battery": "DC / Battery",
-      "VoltageLoadCorrectionInfo": "<b>Hint:</b> When the power output is higher, the voltage is usually decreasing. In order to not stop the inverter too early (Stop treshold), a power factor can be specified here to correct this. Corrected voltage = DC Voltage + (Current power * correction factor).",
-      "Save": "@:dtuadmin.Save"
+      "VoltageLoadCorrectionInfo": "<b>Hint:</b> When the power output is higher, the voltage is usually decreasing. In order to not stop the inverter too early (Stop treshold), a power factor can be specified here to correct this. Corrected voltage = DC Voltage + (Current power * correction factor)."
     },
     "login": {
         "Login": "Connexion",
@@ -667,7 +682,7 @@
         "Back": "Retour",
         "Retry": "Réessayer",
         "OtaStatus": "Statut OTA",
-        "OtaSuccess": "Succès de l'OTA. L'unité a été automatiquement redémarrée et sera à nouveau disponible dans quelques instants. N'oubliez pas de recharger l'interface web !",
+        "OtaSuccess": "Le téléchargement du firmware a réussi. L'appareil a été redémarré automatiquement. Lorsque l'appareil est à nouveau accessible, l'interface est automatiquement rechargée.",
         "FirmwareUpload": "Téléversement du firmware",
         "UploadProgress": "Progression du téléversement"
     },
@@ -704,6 +719,10 @@
         "PowerSafeHint": "Eteindre l'écran si aucun onduleur n'est en production.",
         "Screensaver": "Activer l'écran de veille",
         "ScreensaverHint": "Déplacez un peu l'écran à chaque mise à jour pour éviter le phénomène de brûlure. (Utile surtout pour les écrans OLED)",
+        "DiagramMode": "Diagram mode:",
+        "off": "Off",
+        "small": "Small",
+        "fullscreen": "Fullscreen",
         "DiagramDuration": "Diagram duration:",
         "DiagramDurationHint": "The time period which is shown in the diagram.",
         "Seconds": "Seconds",
@@ -768,14 +787,13 @@
         "enableVoltageLimitHint": "Automatic power control is disabled if the output voltage is higher then this value and if the output power drops below the minimum output power limit (set below).\nAutomatic power control is re-enabled if the battery voltage drops below the value set in this field.",
         "lowerPowerLimit": "Minimum output power",
         "upperPowerLimit": "Maximum output power",
-        "Seconds": "@:dtuadmin.Seconds",
-        "Save": "@:dtuadmin.Save"
+        "Seconds": "@:base.Seconds"
       },
       "battery": {
         "battery": "Battery",
         "DataAge": "Data Age: ",
         "Seconds": " {val} seconds",
-        "Status": "Status",
+        "status": "Status",
         "Property": "Property",
         "yes": "@:base.Yes",
         "no": "@:base.No",
@@ -793,9 +811,15 @@
         "dischargeCurrentLimitation": "Discharge current limit",
         "chargeEnabled": "Charging possible",
         "dischargeEnabled": "Discharging possible",
-        "balancingActive": "Balancing active",
         "chargeImmediately": "Immediate charging requested",
+        "cells": "Cells",
+        "batOneTemp": "Battery temperature 1",
+        "batTwoTemp": "Battery temperature 2",
+        "cellMinVoltage": "Minimum cell voltage",
         "cellAvgVoltage": "Average cell voltage",
+        "cellMaxVoltage": "Maximum cell voltage",
+        "cellDiffVoltage": "Cell voltage difference",
+        "balancingActive": "Balancing active",
         "issues": "Issues",
         "noIssues": "No Issues",
         "issueName": "Name",

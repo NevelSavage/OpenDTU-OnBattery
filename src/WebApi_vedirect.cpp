@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "WebApi_vedirect.h"
 #include "VictronMppt.h"
@@ -11,7 +11,7 @@
 #include "WebApi_errors.h"
 #include "helper.h"
 
-void WebApiVedirectClass::init(AsyncWebServer& server)
+void WebApiVedirectClass::init(AsyncWebServer& server, Scheduler& scheduler)
 {
     using std::placeholders::_1;
 
@@ -22,10 +22,6 @@ void WebApiVedirectClass::init(AsyncWebServer& server)
     _server->on("/api/vedirect/config", HTTP_POST, std::bind(&WebApiVedirectClass::onVedirectAdminPost, this, _1));
 }
 
-void WebApiVedirectClass::loop()
-{
-}
-
 void WebApiVedirectClass::onVedirectStatus(AsyncWebServerRequest* request)
 {
     if (!WebApi.checkCredentialsReadonly(request)) {
@@ -33,12 +29,12 @@ void WebApiVedirectClass::onVedirectStatus(AsyncWebServerRequest* request)
     }
     
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
     const CONFIG_T& config = Configuration.get();
 
-    root[F("vedirect_enabled")] = config.Vedirect.Enabled;
-    root[F("verbose_logging")] = config.Vedirect.VerboseLogging;
-    root[F("vedirect_updatesonly")] = config.Vedirect.UpdatesOnly;
+    root["vedirect_enabled"] = config.Vedirect.Enabled;
+    root["verbose_logging"] = config.Vedirect.VerboseLogging;
+    root["vedirect_updatesonly"] = config.Vedirect.UpdatesOnly;
 
     response->setLength();
     request->send(response);
@@ -51,12 +47,12 @@ void WebApiVedirectClass::onVedirectAdminGet(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
     const CONFIG_T& config = Configuration.get();
 
-    root[F("vedirect_enabled")] = config.Vedirect.Enabled;
-    root[F("verbose_logging")] = config.Vedirect.VerboseLogging;
-    root[F("vedirect_updatesonly")] = config.Vedirect.UpdatesOnly;
+    root["vedirect_enabled"] = config.Vedirect.Enabled;
+    root["verbose_logging"] = config.Vedirect.VerboseLogging;
+    root["vedirect_updatesonly"] = config.Vedirect.UpdatesOnly;
 
     response->setLength();
     request->send(response);
@@ -69,12 +65,12 @@ void WebApiVedirectClass::onVedirectAdminPost(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject retMsg = response->getRoot();
-    retMsg[F("type")] = F("warning");
+    auto& retMsg = response->getRoot();
+    retMsg["type"] = "warning";
 
     if (!request->hasParam("data", true)) {
-        retMsg[F("message")] = F("No values found!");
-        retMsg[F("code")] = WebApiError::GenericNoValueFound;
+        retMsg["message"] = "No values found!";
+        retMsg["code"] = WebApiError::GenericNoValueFound;
         response->setLength();
         request->send(response);
         return;
@@ -83,8 +79,8 @@ void WebApiVedirectClass::onVedirectAdminPost(AsyncWebServerRequest* request)
     String json = request->getParam("data", true)->value();
 
     if (json.length() > 1024) {
-        retMsg[F("message")] = F("Data too large!");
-        retMsg[F("code")] = WebApiError::GenericDataTooLarge;
+        retMsg["message"] = "Data too large!";
+        retMsg["code"] = WebApiError::GenericDataTooLarge;
         response->setLength();
         request->send(response);
         return;
@@ -94,8 +90,8 @@ void WebApiVedirectClass::onVedirectAdminPost(AsyncWebServerRequest* request)
     DeserializationError error = deserializeJson(root, json);
 
     if (error) {
-        retMsg[F("message")] = F("Failed to parse data!");
-        retMsg[F("code")] = WebApiError::GenericParseError;
+        retMsg["message"] = "Failed to parse data!";
+        retMsg["code"] = WebApiError::GenericParseError;
         response->setLength();
         request->send(response);
         return;
@@ -104,25 +100,22 @@ void WebApiVedirectClass::onVedirectAdminPost(AsyncWebServerRequest* request)
     if (!root.containsKey("vedirect_enabled") ||
             !root.containsKey("verbose_logging") ||
             !root.containsKey("vedirect_updatesonly") ) {
-        retMsg[F("message")] = F("Values are missing!");
-        retMsg[F("code")] = WebApiError::GenericValueMissing;
+        retMsg["message"] = "Values are missing!";
+        retMsg["code"] = WebApiError::GenericValueMissing;
         response->setLength();
         request->send(response);
         return;
     }
 
     CONFIG_T& config = Configuration.get();
-    config.Vedirect.Enabled = root[F("vedirect_enabled")].as<bool>();
-    config.Vedirect.VerboseLogging = root[F("verbose_logging")].as<bool>();
-    config.Vedirect.UpdatesOnly = root[F("vedirect_updatesonly")].as<bool>();
-    Configuration.write();
+    config.Vedirect.Enabled = root["vedirect_enabled"].as<bool>();
+    config.Vedirect.VerboseLogging = root["verbose_logging"].as<bool>();
+    config.Vedirect.UpdatesOnly = root["vedirect_updatesonly"].as<bool>();
 
-    VictronMppt.updateSettings();
-
-    retMsg[F("type")] = F("success");
-    retMsg[F("message")] = F("Settings saved!");
-    retMsg[F("code")] = WebApiError::GenericSuccess;
+    WebApi.writeConfig(retMsg);
 
     response->setLength();
     request->send(response);
+
+    VictronMppt.updateSettings();
 }

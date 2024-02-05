@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "Configuration.h"
 #include "MessageOutput.h"
+#include "Utils.h"
 #include "defaults.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <nvs_flash.h>
 
 CONFIG_T config;
 
@@ -24,6 +26,10 @@ bool ConfigurationClass::write()
     config.Cfg.SaveCount++;
 
     DynamicJsonDocument doc(JSON_BUFFER_SIZE);
+
+    if (!Utils::checkJsonAlloc(doc, __FUNCTION__, __LINE__)) {
+        return false;
+    }
 
     JsonObject cfg = doc.createNestedObject("cfg");
     cfg["version"] = config.Cfg.Version;
@@ -91,6 +97,7 @@ bool ConfigurationClass::write()
     dtu["nrf_pa_level"] = config.Dtu.Nrf.PaLevel;
     dtu["cmt_pa_level"] = config.Dtu.Cmt.PaLevel;
     dtu["cmt_frequency"] = config.Dtu.Cmt.Frequency;
+    dtu["cmt_country_mode"] = config.Dtu.Cmt.CountryMode;
 
     JsonObject security = doc.createNestedObject("security");
     security["password"] = config.Security.Password;
@@ -105,7 +112,8 @@ bool ConfigurationClass::write()
     display["rotation"] = config.Display.Rotation;
     display["contrast"] = config.Display.Contrast;
     display["language"] = config.Display.Language;
-    display["diagram_duration"] = config.Display.DiagramDuration;
+    display["diagram_duration"] = config.Display.Diagram.Duration;
+    display["diagram_mode"] = config.Display.Diagram.Mode;
 
     JsonArray leds = device.createNestedArray("led");
     for (uint8_t i = 0; i < PINMAPPING_LED_COUNT; i++) {
@@ -199,6 +207,7 @@ bool ConfigurationClass::write()
     battery["provider"] = config.Battery.Provider;
     battery["jkbms_interface"] = config.Battery.JkBmsInterface;
     battery["jkbms_polling_interval"] = config.Battery.JkBmsPollingInterval;
+    battery["mqtt_topic"] = config.Battery.MqttTopic;
 
     JsonObject huawei = doc.createNestedObject("huawei");
     huawei["enabled"] = config.Huawei.Enabled;
@@ -224,6 +233,11 @@ bool ConfigurationClass::read()
     File f = LittleFS.open(CONFIG_FILENAME, "r", false);
 
     DynamicJsonDocument doc(JSON_BUFFER_SIZE);
+
+    if (!Utils::checkJsonAlloc(doc, __FUNCTION__, __LINE__)) {
+        return false;
+    }
+
     // Deserialize the JSON document
     const DeserializationError error = deserializeJson(doc, f);
     if (error) {
@@ -327,6 +341,7 @@ bool ConfigurationClass::read()
     config.Dtu.Nrf.PaLevel = dtu["nrf_pa_level"] | DTU_NRF_PA_LEVEL;
     config.Dtu.Cmt.PaLevel = dtu["cmt_pa_level"] | DTU_CMT_PA_LEVEL;
     config.Dtu.Cmt.Frequency = dtu["cmt_frequency"] | DTU_CMT_FREQUENCY;
+    config.Dtu.Cmt.CountryMode = dtu["cmt_country_mode"] | DTU_CMT_COUNTRY_MODE;
 
     JsonObject security = doc["security"];
     strlcpy(config.Security.Password, security["password"] | ACCESS_POINT_PASSWORD, sizeof(config.Security.Password));
@@ -341,7 +356,8 @@ bool ConfigurationClass::read()
     config.Display.Rotation = display["rotation"] | DISPLAY_ROTATION;
     config.Display.Contrast = display["contrast"] | DISPLAY_CONTRAST;
     config.Display.Language = display["language"] | DISPLAY_LANGUAGE;
-    config.Display.DiagramDuration = display["diagram_duration"] | DISPLAY_DIAGRAM_DURATION;
+    config.Display.Diagram.Duration = display["diagram_duration"] | DISPLAY_DIAGRAM_DURATION;
+    config.Display.Diagram.Mode = display["diagram_mode"] | DISPLAY_DIAGRAM_MODE;
 
     JsonArray leds = device["led"];
     for (uint8_t i = 0; i < PINMAPPING_LED_COUNT; i++) {
@@ -435,6 +451,7 @@ bool ConfigurationClass::read()
     config.Battery.Provider = battery["provider"] | BATTERY_PROVIDER;
     config.Battery.JkBmsInterface = battery["jkbms_interface"] | BATTERY_JKBMS_INTERFACE;
     config.Battery.JkBmsPollingInterval = battery["jkbms_polling_interval"] | BATTERY_JKBMS_POLLING_INTERVAL;
+    strlcpy(config.Battery.MqttTopic, battery["mqtt_topic"] | "", sizeof(config.Battery.MqttTopic));
 
     JsonObject huawei = doc["huawei"];
     config.Huawei.Enabled = huawei["enabled"] | HUAWEI_ENABLED;
@@ -458,6 +475,11 @@ void ConfigurationClass::migrate()
     }
 
     DynamicJsonDocument doc(JSON_BUFFER_SIZE);
+
+    if (!Utils::checkJsonAlloc(doc, __FUNCTION__, __LINE__)) {
+        return;
+    }
+
     // Deserialize the JSON document
     const DeserializationError error = deserializeJson(doc, f);
     if (error) {
@@ -485,6 +507,19 @@ void ConfigurationClass::migrate()
     if (config.Cfg.Version < 0x00011900) {
         JsonObject dtu = doc["dtu"];
         config.Dtu.Nrf.PaLevel = dtu["pa_level"];
+    }
+
+    if (config.Cfg.Version < 0x00011a00) {
+        // This migration fixes this issue: https://github.com/espressif/arduino-esp32/issues/8828
+        // It occours when migrating from Core 2.0.9 to 2.0.14
+        // which was done by updating ESP32 PlatformIO from 6.3.2 to 6.5.0
+        nvs_flash_erase();
+        nvs_flash_init();
+    }
+
+    if (config.Cfg.Version < 0x00011b00) {
+        // Convert from kHz to Hz
+        config.Dtu.Cmt.Frequency *= 1000;
     }
 
     f.close();

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "WebApi_ws_vedirect_live.h"
 #include "AsyncJson.h"
 #include "Configuration.h"
 #include "MessageOutput.h"
+#include "Utils.h"
 #include "WebApi.h"
 #include "defaults.h"
 #include "PowerLimiter.h"
@@ -16,7 +17,7 @@ WebApiWsVedirectLiveClass::WebApiWsVedirectLiveClass()
 {
 }
 
-void WebApiWsVedirectLiveClass::init(AsyncWebServer& server)
+void WebApiWsVedirectLiveClass::init(AsyncWebServer& server, Scheduler& scheduler)
 {
     using std::placeholders::_1;
     using std::placeholders::_2;
@@ -30,16 +31,29 @@ void WebApiWsVedirectLiveClass::init(AsyncWebServer& server)
 
     _server->addHandler(&_ws);
     _ws.onEvent(std::bind(&WebApiWsVedirectLiveClass::onWebsocketEvent, this, _1, _2, _3, _4, _5, _6));
+
+    
+    scheduler.addTask(_wsCleanupTask);
+    _wsCleanupTask.setCallback(std::bind(&WebApiWsVedirectLiveClass::wsCleanupTaskCb, this));
+    _wsCleanupTask.setIterations(TASK_FOREVER);
+    _wsCleanupTask.setInterval(1 * TASK_SECOND);
+    _wsCleanupTask.enable();
+
+    scheduler.addTask(_sendDataTask);
+    _sendDataTask.setCallback(std::bind(&WebApiWsVedirectLiveClass::sendDataTaskCb, this));
+    _sendDataTask.setIterations(TASK_FOREVER);
+    _sendDataTask.setInterval(500 * TASK_MILLISECOND);
+    _sendDataTask.enable();
 }
 
-void WebApiWsVedirectLiveClass::loop()
+void WebApiWsVedirectLiveClass::wsCleanupTaskCb()
 {
     // see: https://github.com/me-no-dev/ESPAsyncWebServer#limiting-the-number-of-web-socket-clients
-    if (millis() - _lastWsCleanup > 1000) {
-        _ws.cleanupClients();
-        _lastWsCleanup = millis();
-    }
+    _ws.cleanupClients();
+}
 
+void WebApiWsVedirectLiveClass::sendDataTaskCb()
+{
     // do nothing if no WS client is connected
     if (_ws.count() == 0) {
         return;
@@ -55,16 +69,15 @@ void WebApiWsVedirectLiveClass::loop()
     if (millis() - _lastWsPublish > (10 * 1000) || lastDataAgeMillis > _dataAgeMillis) {
         
         try {
-            String buffer;
-            // free JsonDocument as soon as possible
-            {
-                DynamicJsonDocument root(_responseSize);
+            std::lock_guard<std::mutex> lock(_mutex);
+            DynamicJsonDocument root(_responseSize);
+            if (Utils::checkJsonAlloc(root, __FUNCTION__, __LINE__)) {
                 JsonVariant var = root;
                 generateJsonResponse(var);
+
+                String buffer;
                 serializeJson(root, buffer);
-            }
-            
-            if (buffer) {        
+           
                 if (Configuration.get().Security.AllowReadonly) {
                     _ws.setAuthentication("", "");
                 } else {
@@ -76,6 +89,8 @@ void WebApiWsVedirectLiveClass::loop()
 
         } catch (std::bad_alloc& bad_alloc) {
             MessageOutput.printf("Calling /api/vedirectlivedata/status has temporarily run out of resources. Reason: \"%s\".\r\n", bad_alloc.what());
+        } catch (const std::exception& exc) {
+            MessageOutput.printf("Unknown exception in /api/vedirectlivedata/status. Reason: \"%s\".\r\n", exc.what());
         }
 
         _lastWsPublish = millis();
@@ -168,8 +183,9 @@ void WebApiWsVedirectLiveClass::onLivedataStatus(AsyncWebServerRequest* request)
         return;
     }
     try {
+        std::lock_guard<std::mutex> lock(_mutex);
         AsyncJsonResponse* response = new AsyncJsonResponse(false, _responseSize);
-        JsonVariant root = response->getRoot();
+        auto& root = response->getRoot();
 
         generateJsonResponse(root);
 
@@ -177,8 +193,10 @@ void WebApiWsVedirectLiveClass::onLivedataStatus(AsyncWebServerRequest* request)
         request->send(response);
 
     } catch (std::bad_alloc& bad_alloc) {
-        MessageOutput.printf("Calling /api/livedata/status has temporarily run out of resources. Reason: \"%s\".\r\n", bad_alloc.what());
-
+        MessageOutput.printf("Calling /api/vedirectlivedata/status has temporarily run out of resources. Reason: \"%s\".\r\n", bad_alloc.what());
+        WebApi.sendTooManyRequests(request);
+    } catch (const std::exception& exc) {
+        MessageOutput.printf("Unknown exception in /api/vedirectlivedata/status. Reason: \"%s\".\r\n", exc.what());
         WebApi.sendTooManyRequests(request);
     }
 }

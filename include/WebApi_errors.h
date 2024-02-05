@@ -8,12 +8,14 @@ enum WebApiError {
     GenericDataTooLarge,
     GenericParseError,
     GenericValueMissing,
+    GenericWriteFailed,
 
     DtuBase = 2000,
     DtuSerialZero,
     DtuPollZero,
     DtuInvalidPowerLevel,
     DtuInvalidCmtFrequency,
+    DtuInvalidCmtCountry,
 
     ConfigBase = 3000,
     ConfigNotDeleted,

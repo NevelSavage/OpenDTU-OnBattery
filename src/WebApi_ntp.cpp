@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2022-2023 Thomas Basler and others
+ * Copyright (C) 2022-2024 Thomas Basler and others
  */
 #include "WebApi_ntp.h"
 #include "Configuration.h"
@@ -11,7 +11,7 @@
 #include "helper.h"
 #include <AsyncJson.h>
 
-void WebApiNtpClass::init(AsyncWebServer& server)
+void WebApiNtpClass::init(AsyncWebServer& server, Scheduler& scheduler)
 {
     using std::placeholders::_1;
 
@@ -24,10 +24,6 @@ void WebApiNtpClass::init(AsyncWebServer& server)
     _server->on("/api/ntp/time", HTTP_POST, std::bind(&WebApiNtpClass::onNtpTimePost, this, _1));
 }
 
-void WebApiNtpClass::loop()
-{
-}
-
 void WebApiNtpClass::onNtpStatus(AsyncWebServerRequest* request)
 {
     if (!WebApi.checkCredentialsReadonly(request)) {
@@ -35,7 +31,7 @@ void WebApiNtpClass::onNtpStatus(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
     const CONFIG_T& config = Configuration.get();
 
     root["ntp_server"] = config.Ntp.Server;
@@ -80,7 +76,7 @@ void WebApiNtpClass::onNtpAdminGet(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
     const CONFIG_T& config = Configuration.get();
 
     root["ntp_server"] = config.Ntp.Server;
@@ -101,7 +97,7 @@ void WebApiNtpClass::onNtpAdminPost(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject retMsg = response->getRoot();
+    auto& retMsg = response->getRoot();
     retMsg["type"] = "warning";
 
     if (!request->hasParam("data", true)) {
@@ -179,11 +175,8 @@ void WebApiNtpClass::onNtpAdminPost(AsyncWebServerRequest* request)
     config.Ntp.Latitude = root["latitude"].as<double>();
     config.Ntp.Longitude = root["longitude"].as<double>();
     config.Ntp.SunsetType = root["sunsettype"].as<uint8_t>();
-    Configuration.write();
 
-    retMsg["type"] = "success";
-    retMsg["message"] = "Settings saved!";
-    retMsg["code"] = WebApiError::GenericSuccess;
+    WebApi.writeConfig(retMsg);
 
     response->setLength();
     request->send(response);
@@ -201,7 +194,7 @@ void WebApiNtpClass::onNtpTimeGet(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
+    auto& root = response->getRoot();
 
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo, 5)) {
@@ -228,7 +221,7 @@ void WebApiNtpClass::onNtpTimePost(AsyncWebServerRequest* request)
     }
 
     AsyncJsonResponse* response = new AsyncJsonResponse();
-    JsonObject retMsg = response->getRoot();
+    auto& retMsg = response->getRoot();
     retMsg["type"] = "warning";
 
     if (!request->hasParam("data", true)) {

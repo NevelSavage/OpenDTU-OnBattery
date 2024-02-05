@@ -2,13 +2,13 @@
 #pragma once
 
 #include <ESPAsyncWebServer.h>
+#include <TaskSchedulerDeclarations.h>
 #include <AsyncJson.h>
 
 class WebApiHuaweiClass {
 public:
-    void init(AsyncWebServer& server);
-    void loop();
-    void getJsonData(JsonObject& root);
+    void init(AsyncWebServer& server, Scheduler& scheduler);
+    void getJsonData(JsonVariant& root);
 private:
     void onStatus(AsyncWebServerRequest* request);
     void onAdminGet(AsyncWebServerRequest* request);
